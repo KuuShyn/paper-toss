@@ -18,12 +18,15 @@ class Game:
         self.sound_manager.play_bgm("assets/sounds/bgm.mp3")
 
     def setup_display(self):
+        pygame.display.set_caption("Paper Toss")
         self.display = pygame.display.set_mode((800, 600))
         self.background = pygame.image.load("assets/background.png").convert()
         self.background = pygame.transform.scale(self.background, (800, 600))
         self.grey_overlay = pygame.Surface((800, 600), pygame.SRCALPHA)
         self.grey_overlay.fill((128, 128, 128, 150))
         self.font = pygame.font.Font(None, 36)
+        icon = pygame.image.load('assets/icon.png')  # Load the icon
+        pygame.display.set_icon(icon)
 
     def setup_game_variables(self):
         self.running = True
