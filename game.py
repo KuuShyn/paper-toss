@@ -15,52 +15,61 @@ class Game:
         self.setup_display()
         self.setup_game_variables()
         self.setup_sound_manager()
-        self.sound_manager.play_bgm('assets/sounds/bgm.mp3')
-        
+        self.sound_manager.play_bgm("assets/sounds/bgm.mp3")
 
     def setup_display(self):
         self.display = pygame.display.set_mode((800, 600))
-        self.background = pygame.image.load('assets/background.png').convert()
+        self.background = pygame.image.load("assets/background.png").convert()
         self.background = pygame.transform.scale(self.background, (800, 600))
         self.grey_overlay = pygame.Surface((800, 600), pygame.SRCALPHA)
         self.grey_overlay.fill((128, 128, 128, 150))
+        self.font = pygame.font.Font(None, 36)
 
     def setup_game_variables(self):
         self.running = True
         self.menu = Menu()
-        self.state = 'menu'
+        self.state = "menu"
         self.start_time = None
         self.spawn_bins()
         self.spawn_paper()
         self.score = 0
         self.throw_start = None
         self.level = 1
-        self.level_times = {1: 10, 2: 8, 3: 6, 4: 4, 5: 2, 6: 1}
+        self.level_times = {1: 14, 
+                            2: 12, 
+                            3: 10, 
+                            4: 8, 
+                            5: 6, 
+                            6: 4,
+                            7: 2,
+                            }
 
     def setup_sound_manager(self):
         self.sound_manager = SoundManager()
-        self.sound_manager.load_sound('gameover', 'assets/sounds/gameover.mp3')
-        self.sound_manager.load_sound('score', 'assets/sounds/score.mp3')
-        self.sound_manager.load_sound('throw', 'assets/sounds/throw.mp3')
-    
+        self.sound_manager.load_sound("gameover", "assets/sounds/gameover.mp3")
+        self.sound_manager.load_sound("score", "assets/sounds/score.mp3")
+        self.sound_manager.load_sound("throw", "assets/sounds/throw.mp3")
+
     def update_game_state(self):
         current_time = pygame.time.get_ticks()
-        remaining_time = self.level_times[self.level] - (current_time - self.start_time) // 1000
+        remaining_time = (
+            self.level_times[self.level] - (current_time - self.start_time) // 1000
+        )
         if remaining_time <= 0:
-            self.state = 'game_over'
-            
+            self.state = "game_over"
+
         else:
             self.display_remaining_time(remaining_time)
             self.check_in_bins()
-           
+
     def level_up(self):
         self.level += 1
-        if self.level > 6:
-            self.state = 'game_over'
+        if self.level > 7:
+            self.state = "game_over"
         else:
             self.reset_game()
-            self.start_time = pygame.time.get_ticks()  
-        
+            self.start_time = pygame.time.get_ticks()
+
     def run(self):
         while self.running:
             self.handle_events()
@@ -73,12 +82,16 @@ class Game:
                 self.running = False
 
             action = self.menu.handle_event(event)
-            if action == 'play':
-                self.state = 'play'
-            elif action == 'exit':
+            if action == "back":
+                self.state = "menu"
+            if action == "play":
+                self.state = "play"
+            elif action == "how-to-play":
+                self.state = "how-to-play"
+            elif action == "exit":
                 self.running = False
 
-            if self.state == 'play':
+            if self.state == "play":
                 self.handle_play_events(event)
 
     def handle_play_events(self, event):
@@ -91,11 +104,10 @@ class Game:
                 throw_end = pygame.mouse.get_pos()
                 self.paper.throw(self.throw_start, throw_end)
                 self.throw_start = None
-                self.sound_manager.play_sound('throw')
-    
+                self.sound_manager.play_sound("throw")
+
     def display_remaining_time(self, remaining_time):
         self.display_text(str(max(remaining_time, 0)), (10, 10), 74, (255, 0, 0))
-
 
     def display_text(self, text, position, size, color):
         """Display text on the screen at the given position."""
@@ -107,12 +119,31 @@ class Game:
         self.display.blit(self.background, (0, 0))
         self.display.blit(self.grey_overlay, (0, 0))
 
-        if self.state == 'menu':
+        if self.state == "menu":
             self.menu.draw(self.display)
-        elif self.state == 'play':
+        elif self.state == "play":
             self.play_game()
-            self.display_text(f'Level: {self.level}', (10, 80), 30, (255, 255, 255))  # Display the level
-        elif self.state == 'game_over':
+            self.display_text(
+                f"Level: {self.level}", (10, 80), 30, (255, 255, 255)
+            )  # Display the level
+        elif self.state == 'how-to-play':
+            self.display.fill((0, 0, 0))  # Clear the screen
+            instructions = [
+                'How to Play:',
+                '1. Click on the paper to start throwing.',
+                '2. Drag the mouse in the direction you want to throw.',
+                '3. Release the mouse button to throw the paper.',
+                '4. Level up by throwing the paper into the correct bin.',
+                '5. The time to complete each level decreases as you level up.',
+                '6. The game ends when the time runs out.',
+
+            ]
+            for i, instruction in enumerate(instructions):
+                text = self.font.render(instruction, True, (255, 255, 255))
+                self.display.blit(text, (50, 50 + 40 * i))
+            self.menu.draw_back_button(self.display)  # Draw the "Back" button
+
+        elif self.state == "game_over":
             self.game_over()
 
         pygame.display.flip()
@@ -121,75 +152,78 @@ class Game:
         self.paper.throw(self.throw_start, throw_end)
 
     def reset_game(self):
-        self.score = 0 
-        self.spawn_paper()  
-        self.start_time = pygame.time.get_ticks()  
-
+        self.score = 0
+        self.spawn_paper()
+        self.start_time = pygame.time.get_ticks()
 
     def game_over(self):
-        self.display.blit(self.grey_overlay, (0, 0))  
+        self.display.blit(self.grey_overlay, (0, 0))
         font = pygame.font.Font(None, 74)
-        text = font.render('Game Over', 1, (255, 0, 0))
+
+        if self.level >= 7:
+            text = font.render("Amazing!", 1, (255, 0, 0))
+        else:
+            text = font.render("Game Over", 1, (255, 0, 0))
         self.display.blit(text, (250, 250))
-        pygame.display.flip() 
-        pygame.time.wait(1000) 
-        self.reset_game()  
+        pygame.display.flip()
+        pygame.time.wait(1000)
+        self.reset_game()
         self.level = 1
 
-        self.state = 'menu'  
+        self.state = "menu"
 
     def play_game(self):
-        self.bins.draw(self.display)  
-        self.all_sprites.update()  
-        self.all_sprites.draw(self.display) 
+        self.bins.draw(self.display)
+        self.all_sprites.update()
+        self.all_sprites.draw(self.display)
         self.update_game_state()
-        
-        
+
     def check_in_bins(self):
         for bin in self.bins:
             if bin.opening.colliderect(self.paper.rect) and self.paper.velocity.y > 0:
                 if bin.bin_type == self.paper.paper_type:
                     self.score += 1
-                    self.sound_manager.play_sound('score')
+                    self.sound_manager.play_sound("score")
                     self.spawn_paper()
-                    self.level_up()  
+                    self.level_up()
                 else:
-                    self.state = 'game_over'
+                    self.state = "game_over"
                 break
 
     def spawn_bins(self):
 
         bin_positions = [150, 350, 550]
-        random.shuffle(bin_positions)  
+        random.shuffle(bin_positions)
 
- 
         bin_types = [
-            ('assets/cans/green-trash-can.png', 1),
-            ('assets/cans/blue-trash-can.png', 2),
-            ('assets/cans/red-trash-can.png', 3)
+            ("assets/cans/green-trash-can.png", 1),
+            ("assets/cans/blue-trash-can.png", 2),
+            ("assets/cans/red-trash-can.png", 3),
         ]
 
- 
         self.bins = pygame.sprite.Group(
             Bin(image, position, 180, bin_type)
             for (image, bin_type), position in zip(bin_types, bin_positions)
         )
+
     def spawn_paper(self):
- 
+
         paperball_assets = {
-            'assets\paper\paperball-1.png': 1,
-            'assets\paper\paperball-3.png': 3,
-            'assets\paper\paperball-ip.png': 2
+            "assets\paper\paperball-1.png": 1,
+            "assets\paper\paperball-3.png": 3,
+            "assets\paper\paperball-ip.png": 2,
         }
 
         selected_paperball, paper_type = random.choice(list(paperball_assets.items()))
 
-        spritesheet = SpriteSheet(selected_paperball, 50, 60) 
+        spritesheet = SpriteSheet(selected_paperball, 50, 60)
 
-        self.spawn_bins()  
-        self.paper = Paper(spritesheet, 0, 3, 380, 500, 800, 600, paper_type)  
-        self.all_sprites = pygame.sprite.Group(self.paper) 
+        self.spawn_bins()
+        self.paper = Paper(spritesheet, 0, 3, 380, 500, 800, 600, paper_type)
+        self.all_sprites = pygame.sprite.Group(self.paper)
         self.start_time = pygame.time.get_ticks()
+
+
 # Run the game
 game = Game()
 game.run()
