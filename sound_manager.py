@@ -2,7 +2,7 @@ import pygame
 
 class SoundManager:
     def __init__(self):
-        pygame.mixer.init()  # Initialize the mixer module
+        pygame.mixer.init()  
         self.sounds = {}
 
     def load_sound(self, name, file_path):
@@ -17,4 +17,4 @@ class SoundManager:
     def play_bgm(self, file_path):
         """Play a BGM from a file."""
         pygame.mixer.music.load(file_path)
-        pygame.mixer.music.play(-1)  # Play the BGM indefinitely
+        pygame.mixer.music.play(-1) 
