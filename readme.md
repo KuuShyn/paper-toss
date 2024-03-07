@@ -7,7 +7,7 @@
 install pygame
 
 ```py
-pip install requirements.txt
+pip install -r requirements.txt
 ```
 
 run the game
